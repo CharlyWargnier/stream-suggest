@@ -80,7 +80,8 @@ soupsieve==2.0.1
 # streamlit==0.68.1
 streamlit
 streamlit-echarts==0.1.0
-suggests @ git+https://github.com/gitronald/suggests@9109ae8e9f5fcfba1bff7cdfd0be42990edeebe7
+git+https://github.com/gitronald/suggests
+# suggests @ git+https://github.com/gitronald/suggests@9109ae8e9f5fcfba1bff7cdfd0be42990edeebe7
 
 terminado==0.8.3
 testpath==0.4.4
