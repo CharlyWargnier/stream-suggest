@@ -3,9 +3,15 @@ import streamlit as st
 # import suggests
 # from suggests import suggests
 
-from suggests import add_parent_nodes, suggests, to_edgelist, get_suggests_tree
+from suggests import (
+    add_parent_nodes,
+    suggests,
+    to_edgelist,
+    get_suggests_tree,
+    add_metanodes,
+)
 
-# from suggests import suggests, 
+# from suggests import suggests,
 
 # from suggests import get_google_url
 import json
@@ -22,6 +28,23 @@ from pyecharts import options as opts
 from pyecharts.charts import Tree
 from streamlit_echarts import st_echarts
 
+
+def _max_width_():
+    max_width_str = f"max-width: 1400px;"
+    st.markdown(
+        f"""
+    <style>
+    .reportview-container .main .block-container{{
+        {max_width_str}
+    }}
+    </style>    
+    """,
+        unsafe_allow_html=True,
+    )
+
+
+_max_width_()
+
 # st.set_page_config(
 #     page_title="StreamSuggest: Google & Bing Autocomplete suggestions at scale!",
 #     page_icon="🧊",
@@ -32,22 +55,6 @@ from streamlit_echarts import st_echarts
 
 # region Top area ############################################################
 
-def custom_get_google_url():
-    # Retrieve language from session state, or set lang to 'en' by default
-    lang = st.session_state.get("google_url_language", "en")
-    # return f"https://www.google.com/complete/search?sclient=psy-ab&hl={lang}&q="
-    return f"https://www.google.com/complete/search?sclient=psy-ab&gl={lang}&q="
-
-
-# # Select your language, and store it in session state as 'google_url_language'
-# st.selectbox("Language", ["en", "fr", "es"], key="google_url_language")
-# 
-# # Here we replace suggests's function by our own
-# suggests.get_google_url = custom_get_google_url
-# 
-# s = suggests.get_suggests("paris", source="google")
-# s
-
 # endregion Top area ############################################################
 
 st.title("StreamSuggest")
@@ -55,10 +62,28 @@ st.write("Google & Bing autocomplete suggestions at scale!")
 st.write("https://github.com/gitronald/suggests")
 st.header("")
 
+
+def custom_get_google_url():
+    # Retrieve language from session state, or set lang to 'en' by default
+    lang = st.session_state.get("google_url_language", "fr")
+    # return f"https://www.google.com/complete/search?sclient=psy-ab&hl={lang}&q="
+    return f"https://www.google.com/complete/search?sclient=psy-ab&gl={lang}&q="
+
+
+# Select your language, and store it in session state as 'google_url_language'
+st.selectbox("Language", ["en", "fr", "es"], key="google_url_language")
+#
+# Here we replace suggests's function by our own
+suggests.get_google_url = custom_get_google_url
+#
+# s = suggests.get_suggests("paris", source="google")
+# s
+
+
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    keyword = st.text_input("Keyword")
+    keyword = st.text_input("Keyword", value="pain")
 with c2:
     SearchEngine = st.selectbox("Search Engine", ("Google", "Bing"))
 
@@ -74,7 +99,7 @@ with c3:
     maxDepth = st.number_input(
         "Crawl Depth (2 leafs max for now)",
         min_value=1,
-        max_value=2,
+        max_value=3,
         value=1,
         step=1,
         key=None,
@@ -114,10 +139,12 @@ def suggests_tree(*args, **kwargs):
         json.loads = old_loads
 
 
-tree = suggests_tree("français", source="google", max_depth=1)
+# tree = suggests_tree("français", source="google", max_depth=1)
+tree = suggests_tree(keyword, source="google", max_depth=1)
+
 edges = to_edgelist(tree)
-edges = suggests.add_parent_nodes(edges)
-edges = edges.apply(suggests.add_metanodes, axis=1)
+edges = add_parent_nodes(edges)
+edges = edges.apply(add_metanodes, axis=1)
 show_restricted_colsFullDF = [
     "root",
     "edge",
