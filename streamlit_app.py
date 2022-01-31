@@ -3,7 +3,9 @@ import streamlit as st
 # import suggests
 # from suggests import suggests
 
-from suggests import suggests, to_edgelist
+from suggests import add_parent_nodes, suggests, to_edgelist, get_suggests_tree
+
+# from suggests import suggests, 
 
 # from suggests import get_google_url
 import json
@@ -30,24 +32,6 @@ from streamlit_echarts import st_echarts
 
 # region Top area ############################################################
 
-
-def _max_width_():
-    max_width_str = f"max-width: 1400px;"
-    st.markdown(
-        f"""
-    <style>
-    .reportview-container .main .block-container{{
-        {max_width_str}
-    }}
-    </style>    
-    """,
-        unsafe_allow_html=True,
-    )
-
-
-_max_width_()
-
-
 def custom_get_google_url():
     # Retrieve language from session state, or set lang to 'en' by default
     lang = st.session_state.get("google_url_language", "en")
@@ -55,58 +39,21 @@ def custom_get_google_url():
     return f"https://www.google.com/complete/search?sclient=psy-ab&gl={lang}&q="
 
 
-# Select your language, and store it in session state as 'google_url_language'
-st.selectbox("Language", ["en", "fr", "es"], key="google_url_language")
-
-# Here we replace suggests's function by our own
-suggests.get_google_url = custom_get_google_url
-
-s = suggests.get_suggests("paris", source="google")
-s
+# # Select your language, and store it in session state as 'google_url_language'
+# st.selectbox("Language", ["en", "fr", "es"], key="google_url_language")
+# 
+# # Here we replace suggests's function by our own
+# suggests.get_google_url = custom_get_google_url
+# 
+# s = suggests.get_suggests("paris", source="google")
+# s
 
 # endregion Top area ############################################################
 
-c30, c31, c32 = st.columns(3)
-
-with c30:
-    st.image("StreamSuggestLogo.png", width=325)
-
-with c32:
-    st.header("")
-    st.header("")
-    st.markdown(
-        "###### Made in [![this is an image link](https://i.imgur.com/iIOA6kU.png)](https://www.streamlit.io/)&nbsp, with :heart: by [@DataChaz](https://twitter.com/DataChaz) &nbsp [![this is an image link](https://i.imgur.com/thJhzOO.png)](https://www.buymeacoffee.com/cwar05)"
-    )
-
-with st.expander("ℹ️ - About this app ", expanded=True):
-    st.write(
-        """  
-
-- StreamSuggest retrieves auto-complete suggestions from Google and
-   Bing at scale! 🔥
-- Visualise them in tree or
-   tabular form, and export them all to CSV!  - [more info](https://www.charlywargnier.com/post/streamsuggest)
--   The tool is in Beta. Feedback & bug spotting are welcome. [DMs are open!](https://twitter.com/DataChaz)
--   This app is free. If it's useful to you, you can [buy me a coffee](https://www.buymeacoffee.com/cwar05) to support my work! 🙏
-
-	    """
-    )
-
-with st.expander("🛠️ - To-Do's", expanded=False):
-    st.write(
-        """
-	    
--   Currently, StreamSuggest can crawl up to 3 levels deep (2 levels in Tree view), which is about ~450 keywords in one go… Not a bad start!
--   I’m planning to add more levels in the future
-
-	    """
-    )
-
+st.title("StreamSuggest")
+st.write("Google & Bing autocomplete suggestions at scale!")
+st.write("https://github.com/gitronald/suggests")
 st.header("")
-
-language = "fr"
-# language = "fr"
-
 
 c1, c2, c3 = st.columns(3)
 
@@ -128,7 +75,7 @@ with c3:
         "Crawl Depth (2 leafs max for now)",
         min_value=1,
         max_value=2,
-        value=2,
+        value=1,
         step=1,
         key=None,
     )
@@ -139,17 +86,15 @@ c10, c11, c12 = st.columns(3)
 with c10:
     c = st.container()
 
-button1 = st.button("Fetch Suggestions")
+button1 = st.button("Fetch suggestions")
 
 if not keyword:
     c.success("🔼 Type a keyword")
     st.stop()
 
 if keyword and not button1:
-    c.success("🔽 Press 'Fetch Suggestions'")
+    c.success("🔽 'Fetch Suggestions'")
     st.stop()
-
-from suggests import suggests, get_suggests_tree
 
 # Patch suggests to support latin1 decoding
 def suggests_tree(*args, **kwargs):
@@ -170,17 +115,7 @@ def suggests_tree(*args, **kwargs):
 
 
 tree = suggests_tree("français", source="google", max_depth=1)
-tree
-
-# try:
-# edges = suggests.to_edgelist(tree)
-
 edges = to_edgelist(tree)
-
-
-edges
-# st.stop()
-
 edges = suggests.add_parent_nodes(edges)
 edges = edges.apply(suggests.add_metanodes, axis=1)
 show_restricted_colsFullDF = [
